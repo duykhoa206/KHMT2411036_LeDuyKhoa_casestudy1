@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import 'home_screen.dart';
-import 'add_screen.dart';
-import 'edit_screen.dart';
+import 'screens/home_screen.dart';
+import 'screens/add_screen.dart';
+import 'screens/edit_screen.dart';
 
 void main() {
   runApp(const MyApp());
