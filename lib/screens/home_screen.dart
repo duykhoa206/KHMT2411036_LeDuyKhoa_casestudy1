@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
-import 'add_screen.dart';
+import '../models/expense_model.dart';
+import '../database/db_helper.dart';
+import 'add_edit_expense_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -11,61 +13,58 @@ class HomeScreen extends StatefulWidget {
 class _HomeScreenState extends State<HomeScreen> {
   int _currentIndex = 0;
 
-  // Danh sách dữ liệu mẫu giao dịch gần đây
-  final List<Map<String, dynamic>> recentTransactions = [
-    {
-      'title': 'Ăn trưa',
-      'category': 'Ăn uống',
-      'date': '03/09/2024',
-      'amount': '-50.000 đ',
-      'isExpense': true,
-      'icon': Icons.restaurant,
-      'color': Colors.orange,
-    },
-    {
-      'title': 'Xăng xe',
-      'category': 'Di chuyển',
-      'date': '03/09/2024',
-      'amount': '-100.000 đ',
-      'isExpense': true,
-      'icon': Icons.directions_car,
-      'color': Colors.blue,
-    },
-    {
-      'title': 'Lương tháng 9',
-      'category': 'Thu nhập',
-      'date': '01/09/2024',
-      'amount': '+8.000.000 đ',
-      'isExpense': false,
-      'icon': Icons.attach_money,
-      'color': Colors.green,
-    },
-    {
-      'title': 'Mua sắm',
-      'category': 'Mua sắm',
-      'date': '31/08/2024',
-      'amount': '-300.000 đ',
-      'isExpense': true,
-      'icon': Icons.shopping_cart,
-      'color': Colors.purple,
-    },
-    {
-      'title': 'Học phí',
-      'category': 'Giáo dục',
-      'date': '30/08/2024',
-      'amount': '-500.000 đ',
-      'isExpense': true,
-      'icon': Icons.school,
-      'color': Colors.teal,
-    },
-  ];
+  // Dữ liệu từ SQLite
+  List<Expense> _expenses = [];
+  double _totalIncome = 0;
+  double _totalExpense = 0;
+  bool _isLoading = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadData();
+  }
+
+  // Hàm load dữ liệu thật từ SQLite và tính toán tổng thu/chi
+  Future<void> _loadData() async {
+    setState(() => _isLoading = true);
+    final data = await DatabaseHelper.instance.getAllExpenses();
+
+    double income = 0;
+    double expense = 0;
+
+    for (var item in data) {
+      if (item.type == 'income') {
+        income += item.amount;
+      } else {
+        expense += item.amount;
+      }
+    }
+
+    setState(() {
+      _expenses = data;
+      _totalIncome = income;
+      _totalExpense = expense;
+      _isLoading = false;
+    });
+  }
+
+  // Hàm xóa giao dịch
+  void _deleteExpense(int id) async {
+    await DatabaseHelper.instance.deleteExpense(id);
+    _loadData(); // Load lại giao diện sau khi xóa
+  }
 
   @override
   Widget build(BuildContext context) {
+    double balance = _totalIncome - _totalExpense;
+
     return Scaffold(
       backgroundColor: const Color(0xFFF8F9FA),
       body: SafeArea(
-        child: SingleChildScrollView(
+        child: _isLoading
+            ? const Center(child: CircularProgressIndicator())
+            : SingleChildScrollView(
           padding: const EdgeInsets.all(16.0),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -92,13 +91,11 @@ class _HomeScreenState extends State<HomeScreen> {
                       ],
                     ),
                     const SizedBox(height: 8),
-                    const Text(
-                      '5.000.000 đ',
-                      style: TextStyle(color: Colors.white, fontSize: 28, fontWeight: FontWeight.bold),
+                    Text(
+                      '${balance.toStringAsFixed(0)} đ',
+                      style: const TextStyle(color: Colors.white, fontSize: 28, fontWeight: FontWeight.bold),
                     ),
                     const SizedBox(height: 12),
-                    // Dấu chấm chỉ số trang slide
-                    // Dấu chấm chỉ số trang slide
                     Row(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
@@ -136,10 +133,10 @@ class _HomeScreenState extends State<HomeScreen> {
                           Expanded(
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
-                              children: const [
-                                Text('TỔNG THU NHẬP', style: TextStyle(fontSize: 10, color: Colors.grey, fontWeight: FontWeight.bold)),
-                                SizedBox(height: 2),
-                                Text('8.000.000 đ', style: TextStyle(fontSize: 13, color: Colors.green, fontWeight: FontWeight.bold)),
+                              children: [
+                                const Text('TỔNG THU NHẬP', style: TextStyle(fontSize: 10, color: Colors.grey, fontWeight: FontWeight.bold)),
+                                const SizedBox(height: 2),
+                                Text('${_totalIncome.toStringAsFixed(0)} đ', style: const TextStyle(fontSize: 13, color: Colors.green, fontWeight: FontWeight.bold)),
                               ],
                             ),
                           ),
@@ -167,10 +164,10 @@ class _HomeScreenState extends State<HomeScreen> {
                           Expanded(
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
-                              children: const [
-                                Text('TỔNG CHI TIÊU', style: TextStyle(fontSize: 10, color: Colors.grey, fontWeight: FontWeight.bold)),
-                                SizedBox(height: 2),
-                                Text('3.000.000 đ', style: TextStyle(fontSize: 13, color: Colors.redAccent, fontWeight: FontWeight.bold)),
+                              children: [
+                                const Text('TỔNG CHI TIÊU', style: TextStyle(fontSize: 10, color: Colors.grey, fontWeight: FontWeight.bold)),
+                                const SizedBox(height: 2),
+                                Text('${_totalExpense.toStringAsFixed(0)} đ', style: const TextStyle(fontSize: 13, color: Colors.redAccent, fontWeight: FontWeight.bold)),
                               ],
                             ),
                           ),
@@ -182,7 +179,7 @@ class _HomeScreenState extends State<HomeScreen> {
               ),
               const SizedBox(height: 20),
 
-              // 3. Tiêu đề Giao dịch gần đây & Xem tất cả
+              // 3. Tiêu đề Giao dịch gần đây
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
@@ -198,8 +195,15 @@ class _HomeScreenState extends State<HomeScreen> {
               ),
               const SizedBox(height: 8),
 
-              // 4. Danh sách giao dịch gần đây
-              Container(
+              // 4. Danh sách giao dịch từ SQLite
+              _expenses.isEmpty
+                  ? const Center(
+                child: Padding(
+                  padding: EdgeInsets.symmetric(vertical: 20),
+                  child: Text('Chưa có giao dịch nào trong CSDL.', style: TextStyle(color: Colors.grey)),
+                ),
+              )
+                  : Container(
                 decoration: BoxDecoration(
                   color: Colors.white,
                   borderRadius: BorderRadius.circular(16),
@@ -207,25 +211,51 @@ class _HomeScreenState extends State<HomeScreen> {
                 child: ListView.separated(
                   shrinkWrap: true,
                   physics: const NeverScrollableScrollPhysics(),
-                  itemCount: recentTransactions.length,
+                  itemCount: _expenses.length,
                   separatorBuilder: (context, index) => const Divider(height: 1, indent: 60),
                   itemBuilder: (context, index) {
-                    final item = recentTransactions[index];
+                    final item = _expenses[index];
+                    final isIncome = item.type == 'income';
+
                     return ListTile(
                       leading: CircleAvatar(
-                        backgroundColor: (item['color'] as Color).withOpacity(0.15),
-                        child: Icon(item['icon'], color: item['color']),
-                      ),
-                      title: Text(item['title'], style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
-                      subtitle: Text('${item['category']}     ${item['date']}', style: const TextStyle(fontSize: 12, color: Colors.grey)),
-                      trailing: Text(
-                        item['amount'],
-                        style: TextStyle(
-                          fontWeight: FontWeight.bold,
-                          color: item['isExpense'] ? Colors.redAccent : Colors.green,
-                          fontSize: 14,
+                        backgroundColor: isIncome ? Colors.green.shade50 : Colors.red.shade50,
+                        child: Icon(
+                          isIncome ? Icons.arrow_downward : Icons.arrow_upward,
+                          color: isIncome ? Colors.green : Colors.redAccent,
                         ),
                       ),
+                      title: Text(item.title, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
+                      subtitle: Text('${item.category}   •   ${item.date}', style: const TextStyle(fontSize: 12, color: Colors.grey)),
+                      trailing: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Text(
+                            '${isIncome ? '+' : '-'}${item.amount.toStringAsFixed(0)} đ',
+                            style: TextStyle(
+                              fontWeight: FontWeight.bold,
+                              color: isIncome ? Colors.green : Colors.redAccent,
+                              fontSize: 14,
+                            ),
+                          ),
+                          IconButton(
+                            icon: const Icon(Icons.delete_outline, size: 20, color: Colors.grey),
+                            onPressed: () => _deleteExpense(item.id!),
+                          ),
+                        ],
+                      ),
+                      onTap: () async {
+                        final result = await Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => AddEditExpenseScreen(expense: item),
+                          ),
+                        );
+
+                        if (result == true) {
+                          _loadData();
+                        }
+                      },
                     );
                   },
                 ),
@@ -235,38 +265,32 @@ class _HomeScreenState extends State<HomeScreen> {
         ),
       ),
 
-      // Nút FloatingActionButton (Dấu + thêm giao dịch)
+      // Nút FloatingActionButton (mở màn hình thêm giao dịch)
       floatingActionButton: FloatingActionButton(
         backgroundColor: const Color(0xFF1E67D6),
         shape: const CircleBorder(),
-        onPressed: () {
-          Navigator.push(
+        onPressed: () async {
+          // Sau khi thêm mới xong quay lại sẽ tự động làm tươi dữ liệu
+          final result = await Navigator.push(
             context,
-            MaterialPageRoute(builder: (context) => const AddTransactionScreen()),
+            MaterialPageRoute(builder: (context) => const AddEditExpenseScreen()),
           );
+          if (result == true) {
+            _loadData();
+          }
         },
         child: const Icon(Icons.add, color: Colors.white, size: 30),
       ),
 
-      // Thanh điều hướng dưới cùng (Bottom Navigation)
       bottomNavigationBar: BottomNavigationBar(
         currentIndex: _currentIndex,
         onTap: (index) => setState(() => _currentIndex = index),
         selectedItemColor: const Color(0xFF1E67D6),
         unselectedItemColor: Colors.grey,
         items: const [
-          BottomNavigationBarItem(
-            icon: Icon(Icons.home),
-            label: 'Trang chủ',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.receipt_long),
-            label: 'Giao dịch',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.pie_chart),
-            label: 'Thống kê',
-          ),
+          BottomNavigationBarItem(icon: Icon(Icons.home), label: 'Trang chủ'),
+          BottomNavigationBarItem(icon: Icon(Icons.receipt_long), label: 'Giao dịch'),
+          BottomNavigationBarItem(icon: Icon(Icons.pie_chart), label: 'Thống kê'),
         ],
       ),
     );
