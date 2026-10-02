@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'home_screen.dart';
 import 'add_screen.dart';
+import 'edit_screen.dart';
 
 void main() {
   runApp(const MyApp());
@@ -71,9 +73,9 @@ class WelcomeScreen extends StatelessWidget {
                 height: 52,
                 child: ElevatedButton(
                   onPressed: () {
-                    Navigator.push(
+                    Navigator.pushReplacement(
                       context,
-                      MaterialPageRoute(builder: (context) => const AddTransactionScreen()),
+                      MaterialPageRoute(builder: (context) => const HomeScreen()),
                     );
                   },
                   style: ElevatedButton.styleFrom(
