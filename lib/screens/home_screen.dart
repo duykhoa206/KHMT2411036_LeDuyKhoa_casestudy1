@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import '../models/expense_model.dart';
 import '../database/db_helper.dart';
 import 'add_edit_expense_screen.dart';
+import 'transaction_screen.dart';
+import 'statistic_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -57,6 +59,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
   @override
   Widget build(BuildContext context) {
+    // Đã sửa lại lỗi cú pháp phép trừ
     double balance = _totalIncome - _totalExpense;
 
     return Scaffold(
@@ -188,7 +191,17 @@ class _HomeScreenState extends State<HomeScreen> {
                     style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.black87),
                   ),
                   TextButton(
-                    onPressed: () {},
+                    onPressed: () async {
+                      // Chuyển sang màn hình TransactionScreen và chờ đợi kết quả quay về
+                      await Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => const TransactionScreen(),
+                        ),
+                      );
+                      // Sau khi từ màn hình giao dịch quay lại, tự động load lại dữ liệu trang chủ
+                      _loadData();
+                    },
                     child: const Text('Xem tất cả', style: TextStyle(color: Color(0xFF1E67D6))),
                   ),
                 ],
@@ -226,7 +239,8 @@ class _HomeScreenState extends State<HomeScreen> {
                         ),
                       ),
                       title: Text(item.title, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
-                      subtitle: Text('${item.category}   •   ${item.date}', style: const TextStyle(fontSize: 12, color: Colors.grey)),
+                      // Đã sửa lại lỗi subtitle bị ngắt dòng
+                      subtitle: Text('${item.category}  ${item.date}', style: const TextStyle(fontSize: 12, color: Colors.grey)),
                       trailing: Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [
@@ -270,7 +284,6 @@ class _HomeScreenState extends State<HomeScreen> {
         backgroundColor: const Color(0xFF1E67D6),
         shape: const CircleBorder(),
         onPressed: () async {
-          // Sau khi thêm mới xong quay lại sẽ tự động làm tươi dữ liệu
           final result = await Navigator.push(
             context,
             MaterialPageRoute(builder: (context) => const AddEditExpenseScreen()),
@@ -284,7 +297,22 @@ class _HomeScreenState extends State<HomeScreen> {
 
       bottomNavigationBar: BottomNavigationBar(
         currentIndex: _currentIndex,
-        onTap: (index) => setState(() => _currentIndex = index),
+        onTap: (index) {
+          setState(() => _currentIndex = index);
+          if (index == 1) {
+            // Chuyển sang màn hình Giao dịch
+            Navigator.push(
+              context,
+              MaterialPageRoute(builder: (context) => const TransactionScreen()),
+            ).then((_) => _loadData());
+          } else if (index == 2) {
+            // Chuyển sang màn hình Thống kê
+            Navigator.push(
+              context,
+              MaterialPageRoute(builder: (context) => const StatisticScreen()),
+            ).then((_) => _loadData());
+          }
+        },
         selectedItemColor: const Color(0xFF1E67D6),
         unselectedItemColor: Colors.grey,
         items: const [
