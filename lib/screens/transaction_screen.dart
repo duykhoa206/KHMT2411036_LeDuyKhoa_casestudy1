@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../models/expense_model.dart';
 import '../database/db_helper.dart';
 import 'add_edit_expense_screen.dart';
+import 'filter_screen.dart';
 
 class TransactionScreen extends StatefulWidget {
   const TransactionScreen({super.key});
@@ -63,7 +64,19 @@ class _TransactionScreenState extends State<TransactionScreen> {
           style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold, fontSize: 20),
         ),
         iconTheme: const IconThemeData(color: Colors.black),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.filter_list, color: Colors.black),
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => const FilterScreen()),
+              );
+            },
+          ),
+        ],
       ),
+
       body: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 16.0),
         child: Column(

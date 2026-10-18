@@ -19,7 +19,9 @@ class _FilterScreenState extends State<FilterScreen> {
       appBar: AppBar(
         leading: IconButton(
           icon: const Icon(Icons.arrow_back, color: Colors.black),
-          onPressed: () {},
+          onPressed: () {
+            Navigator.pop(context);
+          },
         ),
         title: const Text('Bộ lọc', style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold)),
         backgroundColor: Colors.white,
@@ -111,7 +113,9 @@ class _FilterScreenState extends State<FilterScreen> {
                     borderRadius: BorderRadius.circular(12),
                   ),
                 ),
-                onPressed: () {},
+                onPressed: () {
+                  Navigator.pop(context);
+                },
                 child: const Text('Áp dụng', style: TextStyle(fontSize: 16, color: Colors.white)),
               ),
             ),

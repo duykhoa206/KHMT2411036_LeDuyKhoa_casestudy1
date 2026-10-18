@@ -4,6 +4,7 @@ import '../database/db_helper.dart';
 import 'add_edit_expense_screen.dart';
 import 'transaction_screen.dart';
 import 'statistic_screen.dart';
+import 'profile_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -298,27 +299,53 @@ class _HomeScreenState extends State<HomeScreen> {
       bottomNavigationBar: BottomNavigationBar(
         currentIndex: _currentIndex,
         onTap: (index) {
+          // Nếu bấm lại tab Trang chủ
+          if (index == 0) {
+            setState(() => _currentIndex = 0);
+            return;
+          }
+
+          // Cập nhật trạng thái tab đang chọn tạm thời trước khi chuyển trang
           setState(() => _currentIndex = index);
+
           if (index == 1) {
             // Chuyển sang màn hình Giao dịch
             Navigator.push(
               context,
               MaterialPageRoute(builder: (context) => const TransactionScreen()),
-            ).then((_) => _loadData());
+            ).then((_) {
+              // Khi quay lại, reset về tab Trang chủ và load lại dữ liệu
+              setState(() => _currentIndex = 0);
+              _loadData();
+            });
           } else if (index == 2) {
             // Chuyển sang màn hình Thống kê
             Navigator.push(
               context,
               MaterialPageRoute(builder: (context) => const StatisticScreen()),
-            ).then((_) => _loadData());
+            ).then((_) {
+              setState(() => _currentIndex = 0);
+              _loadData();
+            });
+          } else if (index == 3) {
+            // Chuyển sang màn hình Cá nhân
+            Navigator.push(
+              context,
+              MaterialPageRoute(builder: (context) => const ProfileScreen()),
+            ).then((_) {
+              setState(() => _currentIndex = 0);
+              _loadData();
+            });
           }
         },
         selectedItemColor: const Color(0xFF1E67D6),
         unselectedItemColor: Colors.grey,
+        type: BottomNavigationBarType.fixed,
         items: const [
           BottomNavigationBarItem(icon: Icon(Icons.home), label: 'Trang chủ'),
           BottomNavigationBarItem(icon: Icon(Icons.receipt_long), label: 'Giao dịch'),
           BottomNavigationBarItem(icon: Icon(Icons.pie_chart), label: 'Thống kê'),
+          BottomNavigationBarItem(icon: Icon(Icons.person), label: 'Cá nhân'),
         ],
       ),
     );
